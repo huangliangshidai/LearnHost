@@ -1,0 +1,49 @@
+import os
+import numpy as np
+import librosa
+from tensorflow.keras.models import load_model
+
+# 待检测音频路径
+AUDIO_PATH = "path_to_audio_file.wav"
+
+# 数据准备，类似之前的extract_feature函数
+def extract_feature(file_path):
+    y, sr = librosa.load(file_path, sr=None)
+    # 提取静态MFCCs特征等
+    # ...
+
+# 加载模型
+model = load_model('trained_model2.h5')
+
+# 将音频分割为10个片段
+def split_audio(audio_path, num_segments=10):
+    y, sr = librosa.load(audio_path, sr=None)
+    segment_length = len(y) // num_segments
+    segments = [y[i*segment_length:(i+1)*segment_length] for i in range(num_segments)]
+    return segments
+
+# 对每个片段进行场景分类
+def classify_segments(segments):
+    results = []
+    for segment in segments:
+        feature = extract_feature(segment)
+        feature = np.expand_dims(feature, axis=0)
+        feature = np.expand_dims(feature, axis=-1)
+        prediction = model.predict(feature)
+        class_index = np.argmax(prediction)
+        results.append(class_index)
+    return results
+
+# 获取类别标签
+class_labels = {0: 'class_0', 1: 'class_1', 2: 'class_2', ...}  # 根据您的类别编号修改
+
+# 将音频分割为10个片段
+segments = split_audio(AUDIO_PATH)
+
+# 对每个片段进行场景分类
+segment_results = classify_segments(segments)
+
+# 展示每个片段的场景分类结果
+for i, segment_result in enumerate(segment_results):
+    class_label = class_labels[segment_result]
+    print(f'Segment {i+1} belongs to class: {class_label}')
